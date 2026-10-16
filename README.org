@@ -1,0 +1,280 @@
+#+title: bisos.grafana: Grafana via BISOS Capability Bundles
+#+DATE: <2026-10-15 Thu>
+#+AUTHOR: Mohsen BANAN
+#+OPTIONS: toc:4
+
+#+BEGIN: b:org:pypi:readme/topControls :pkgName "grafana" :comment "basic"
+
+|----------------------+------------------------------------------------------------------|
+| ~Blee Panel Controls~: | [[elisp:(show-all)][Show-All]] : [[elisp:(org-shifttab)][Overview]] : [[elisp:(progn (org-shifttab) (org-content))][Content]] : [[elisp:(delete-other-windows)][(1)]] : [[elisp:(progn (save-buffer) (kill-buffer))][S&Q]] : [[elisp:(save-buffer)][Save]]  : [[elisp:(kill-buffer)][Quit]]  : [[elisp:(bury-buffer)][Bury]] |
+| ~Panel Links~:         | [[file:./py3/panels/bisos.grafana/_nodeBase_/fullUsagePanel-en.org][Repo Blee Panel]] --  [[file:/bisos/git/auth/bxRepos/bisos-pip/grafana/py3/panels/bisos.grafana/_nodeBase_/fullUsagePanel-en.org][Blee Panel]]                                   |
+| ~See Also~:            | [[https://pypi.org/project/bisos.grafana][At PYPI]] : [[https://github.com/bisos-pip/pycs][bisos.PyCS]]                                             |
+|----------------------+------------------------------------------------------------------|
+
+#+END:
+
+* Overview
+
+/bisos.grafana/ is a BISOS package for running [[https://grafana.com/oss/grafana/][Grafana OSS]] on a BISOS
+host as a BISOS Capability Bundle (CBS/CBM) of =systemd=-planted Command Services.
+
+A planted pointer leaf (=cbmProc.spcs=, at =sys/cbm/collective/hereWeb/grafana/=) subprocess-invokes a
+Capability Bundle Specification (=grafana-cbs.pcs=). The CBS declares package installation (sboms), the
+=grafana= =systemd= unit, and the assembly step that makes Grafana browsable as =http://grafana.here=.
+
+Debian does not package Grafana. The sbom fetches the Grafana OSS tarball from upstream at a pinned
+version, refusing it if its checksum does not match.
+
+It is useful out of the box: this host's Prometheus ([[https://github.com/bisos-pip/prometheus][bisos.prometheus]])
+is provisioned as the default datasource, and a small /Host (node_exporter)/ dashboard is provisioned
+under the /BISOS/ folder. The login is *admin / grafana*.
+
+#+BEGIN: b:org:pypi:readme/pkgDocumentation :pkgName "grafana-cs" :comment "basic"
+
+# PYPI Documentation Comes Here in _description.org
+#+END:
+
+* Table of Contents     :TOC:
+- [[#overview][Overview]]
+- [[#the-bisos-grafana-model][The BISOS Grafana Model]]
+- [[#the-login-rawbisos-convenience-insecure-by-design][The Login: rawBisos Convenience, Insecure by Design]]
+- [[#what-gets-installed-and-where][What Gets Installed, and Where]]
+- [[#the-3-sboms-server-usage-and-the-cbss][The 3 sboms: Server, Usage, and the CBS's]]
+- [[#the-systemd-unit][The systemd Unit]]
+- [[#listeners-and-ports][Listeners and Ports]]
+- [[#installation][Installation]]
+  - [[#installation-with-pip][Installation With pip]]
+  - [[#installation-with-pipx][Installation With pipx]]
+- [[#usage][Usage]]
+  - [[#materialization][Materialization]]
+  - [[#day-to-day-admin-grafanaadmincs][Day-to-Day Admin: =grafanaAdmin.cs=]]
+  - [[#direct-command-cheat-sheet-quickgrafanacs][Direct Command Cheat Sheet: =quickGrafana.cs=]]
+  - [[#the-api-curl-and-gcx][The API: curl and gcx]]
+- [[#key-files][Key Files]]
+- [[#part-of-bisos--bystar-internet-services-operating-system][Part of BISOS — ByStar Internet Services Operating System]]
+- [[#documentation-and-blee-panels][Documentation and Blee-Panels]]
+- [[#support][Support]]
+- [[#planned-improvements][Planned Improvements]]
+
+* The BISOS Grafana Model
+
+=bisos.grafana= (=/bisos/git/bxRepos/bisos-pip/grafana=) packages Grafana OSS 13.2.4 as a hereWeb
+CBS/CBM. It is built on the same pattern as =bisos.kafka= and =bisos.prometheus= (the
+=cbm-package-authorship= skill): one module of facts (=grafanaInfo.py=), pinned and checksummed upstream
+binaries, config written only when absent, a read-only =driftCheck=, a service sbom and a usage sbom
+joined only by the CBS.
+
+=bisos.grafana= does not import =bisos.prometheus=: the datasource takes Prometheus's port from
+=bisos.banna=. On a host without Prometheus the datasource is simply unreachable.
+
+Grafana would otherwise download its "preinstalled" app plugins from grafana.com at every start, unpinned
+and unverified, outside the sbom. =grafana.ini= turns that off (=[plugins] preinstall_disabled = true=),
+as it turns off usage reporting and update checks. Plugins are installed deliberately, with =grafana cli=.
+
+*As of 2026-10-15 it is materialized on one host* (Debian 13): unit active, =http://grafana.here/login=
+200, the Prometheus datasource healthy, the host dashboard provisioned, =driftCheck= agrees.
+
+* The Login: rawBisos Convenience, Insecure by Design
+
+=bisos.grafana= is used primarily in rawBisos (=bro_rawBisos=), a public layer that is recognized as
+insecure. Its convention is user =admin=, password the service's name: *admin / grafana*. It is set in
+=grafana.ini= (=[security]=), which Grafana applies only when it creates =grafana.db= at the first start;
+change it later in the UI or with =grafana cli admin reset-admin-password=. A "secure it" layer, on top of
+this one, is where a real password, HTTPS and listening beyond loopback belong.
+
+* What Gets Installed, and Where
+
+Every fact below lives in one place, =py3/bisos/grafana/grafanaInfo.py=, which the sboms, the unit, the
+dns and vhost files and the admin CS all read.
+
+| What                     | Where                                                  | Owner            |
+|--------------------------+--------------------------------------------------------+------------------|
+| The =grafana= account      | uid/gid 505, from bisos.banna =sysAccts=                 | ---              |
+| Grafana OSS 13.2.4       | =/opt/grafana/grafana-13.2.4=                            | root             |
+| Active Grafana           | =/opt/grafana/current= -> the above (=--homepath=)        | root             |
+| gcx 1.6.0 (usage side)   | =/opt/grafana/gcx-1.6.0=, =/opt/grafana/gcx= -> it         | root             |
+| Config                   | =/etc/grafana/grafana.ini=                               | root:grafana 640 |
+| Overrides (=GF_*=)         | =/etc/default/grafana=                                   | root:grafana 640 |
+| Datasource provisioning  | =/etc/grafana/provisioning/datasources/prometheus.yaml=  | root:grafana 640 |
+| Dashboard provisioning   | =/etc/grafana/provisioning/dashboards/bisos.yaml=        | root:grafana 640 |
+| The host dashboard       | =/etc/grafana/dashboards/host.json=                      | root:grafana 640 |
+| =grafana.db=, plugins      | =/var/lib/grafana=                                       | grafana 750      |
+
+=/etc/grafana= is 750 root:grafana: =grafana.ini= holds the login. Every file is written only when absent,
+so hand overrides survive re-runs of the sbom; =grafanaAdmin.cs -i driftCheck= diffs each live file
+against its generator. Only amd64 has a pinned checksum today; the sbom refuses another architecture.
+
+* The 3 sboms: Server, Usage, and the CBS's
+
+| sbom                     | Installs                                          | Pulls in       |
+|--------------------------+---------------------------------------------------+----------------|
+| =grafana-sbom.pcs=         | the account, Grafana, config and provisioning     | nothing        |
+| =grafanaUsage-sbom.pcs=    | gcx, Grafana Labs' CLI for Grafana's HTTP API     | nothing        |
+| =grafanaCbs-sbom.pcs=      | nothing of its own                                | the two above  |
+
+Grafana's HTTP API is part of the server; what uses it is packaged separately. =gcx= (which replaced
+=grafanactl=) is a pinned, checksummed binary, so it is the usage sbom's. =grafana-foundation-sdk=
+(dashboards as code, Python) goes into each consumer's own venv. =grafana cli= ships with the server and
+does server-side admin, so it stays with the server. The CBS runs both sboms, through =grafanaCbs-sbom.pcs=,
+because a CBS names one sbom.
+
+* The systemd Unit
+
+| Unit               | Runs                                                              | Ordering               |
+|--------------------+-------------------------------------------------------------------+------------------------|
+| =grafana-sysd.pcs=   | =grafana server --homepath=/opt/grafana/current --config=grafana.ini= | =After=network.target=   |
+
+It runs as =User=grafana=. Logs go to journald (=[log] mode = console=).
+
+* Listeners and Ports
+
+Ports are assigned in =bisos.banna= (=tcpPorts.py=), never hardcoded.
+
+| Listener                  | Address              | banna name    |
+|---------------------------+----------------------+---------------|
+| Grafana (UI, HTTP API)    | =127.0.0.1:24011=      | =grafana=       |
+| Grafana, via nginx        | =http://grafana.here= | --- (127.0.22.115) |
+| The datasource it queries | =127.0.0.1:24010=      | =prometheus=    |
+
+The nginx vhost also upgrades =/api/live/= to WebSocket, which Grafana Live needs.
+
+* Installation
+
+The sources for the bisos.grafana pip package are maintained at:\\
+https://github.com/bisos-pip/grafana
+
+The bisos.grafana pip package is available at PYPI as\\
+https://pypi.org/project/bisos.grafana
+
+You can install bisos.grafana with pip or pipx.
+
+** Installation With pip
+
+If you need access to bisos.grafana as a python module, install it with pip:
+
+#+begin_src bash
+pip install bisos.grafana
+#+end_src
+
+** Installation With pipx
+
+If you only need access to bisos.grafana on the command line, install it with pipx:
+
+#+begin_src bash
+pipx install bisos.grafana
+#+end_src
+
+The following commands are made available:
+
+- =grafanaAdmin.cs= --- day-to-day admin CS for this host's =grafana.here= installation.
+- =quickGrafana.cs= --- direct-command cheat sheet: the HTTP API, gcx, grafana cli, the unit.
+- =grafana-assemble.cs= --- assembly step: =grafana.here= dns entry and nginx vhost.
+- =cbmProc-grafana.spcs= --- planted CBM pointer that materializes the CBS at this host.
+
+The planted =.pcs= files (=grafana-cbs.pcs=, the three sboms, =grafana-sysd.pcs=, =grafana-here-dns.pcs=,
+=grafana-wvd.pcs=) are invoked directly from =py3/bin/=.
+
+* Usage
+
+** Materialization
+
+#+begin_src bash
+grafana-sbom.pcs -i sbom_fullUpdate             # install the server only
+grafanaUsage-sbom.pcs -i sbom_fullUpdate        # install the usage side only (gcx)
+grafana-cbs.pcs -i cbs_materialize              # both sboms + unit + assemble
+cbmProc-grafana.spcs -i cbm_enable              # at the planted CBM leaf, then:
+cbmProc-grafana.spcs -i cbm_materialize
+#+end_src
+
+Then browse =http://grafana.here=, log in as admin / grafana, and open /Dashboards > BISOS > Host
+(node_exporter)/.
+
+** Day-to-Day Admin: =grafanaAdmin.cs=
+
+#+begin_src bash
+grafanaAdmin.cs -i hostInfo        # fqdn, listener, login, install/config/data paths
+grafanaAdmin.cs -i servicesInfo    # links for operating the unit, dns and vhost
+grafanaAdmin.cs -i apiInfo         # health, datasources, dashboards through curl and gcx
+grafanaAdmin.cs -i driftCheck      # read-only: live config/provisioning, unit and link vs grafanaInfo
+grafanaAdmin.cs -i fullUpdate      # the three info Cmnds together
+#+end_src
+
+** Direct Command Cheat Sheet: =quickGrafana.cs=
+
+#+begin_src bash
+quickGrafana.cs
+#+end_src
+
+** The API: curl and gcx
+
+#+begin_src bash
+curl -s http://127.0.0.1:24011/api/health
+curl -s -u admin:grafana http://grafana.here/api/datasources/uid/bisos-prometheus/health
+export GCX_KEYCHAIN=off     # gcx wants an OS keychain; a BISOS host has none (plaintext under ~/.config/gcx)
+GRAFANA_PASSWORD=grafana /opt/grafana/gcx/gcx login local --server http://grafana.here --basic-auth --user admin --yes
+/opt/grafana/gcx/gcx dashboards list
+#+end_src
+
+* Key Files
+
+- =py3/bisos/grafana/grafanaInfo.py= --- the single source of facts: pinned versions and checksums, paths, ports, the login, the generators of the config and provisioning files (including the host dashboard) and the unit's identity lines, the tarball-install script, and the drift helpers.
+- =py3/bin/grafana-cbs.pcs= --- CBS declaring the bundle (sbom + unit + assemble).
+- =py3/bin/cbmProc-grafana.spcs= --- planted CBM pointer leaf that materializes the CBS.
+- =py3/bin/grafana-sbom.pcs=, =grafanaUsage-sbom.pcs=, =grafanaCbs-sbom.pcs= --- the server, usage and CBS sboms via [[https://github.com/bisos-pip/sbom][bisos.sbom]].
+- =py3/bin/grafana-sysd.pcs= --- the unit.
+- =py3/bin/grafana-assemble.cs= --- assembly step (dns + vhost).
+- =py3/bin/grafana-here-dns.pcs= --- =.here= fake-domain DNS registration for =grafana.here=.
+- =py3/bin/grafana-wvd.pcs= --- nginx vhost for =grafana.here=, proxying to Grafana on loopback, with the WebSocket upgrade for Grafana Live.
+- =py3/bin/grafanaAdmin.cs=, =py3/bin/quickGrafana.cs= --- admin CS and cheat sheet.
+- =py3/tests/verify.sh= --- smoke test of every command and of =grafanaInfo='s invariants.
+- =py3/setup.py=, =py3/pypiProc.sh= --- PyPI packaging (setup.py is dblock-driven; do not hand-edit).
+
+* Part of BISOS — ByStar Internet Services Operating System
+
+Layered on top of Debian, *BISOS* (By* Internet Services Operating System)
+is a unified and universal framework for developing both internet services and
+software-service continuums that use internet services. See
+[[https://github.com/bxGenesis/start][Bootstrapping ByStar, BISOS and Blee]]
+for information about getting started with BISOS.
+
+*BISOS* is a foundation for *The Libre-Halaal ByStar Digital Ecosystem* which
+is described as a cure for losses of autonomy and privacy in a book titled:
+[[https://github.com/bxplpc/120033][Nature of Polyexistentials]]
+
+/bisos.grafana/ is part of BISOS. It is a standalone package that can
+be used independently of the full BISOS environment.
+
+* Documentation and Blee-Panels
+
+bisos.grafana is part of the ByStar Digital Ecosystem
+[[http://www.by-star.net]].
+
+This module's primary documentation is in the form of Blee-Panels.
+Blee-Panels are in the =./py3/panels= directory. From within Blee and
+BISOS these panels are accessible under the Blee "Panels" menu.
+
+See [[file:./py3/panels/bisos.grafana/_nodeBase_/fullUsagePanel-en.org]]
+for a starting point.
+
+/bisos.grafana/ is best developed with [[https://github.com/bx-blee][Blee]], the /By* BISOS
+Libre-Halaal Emacs Environment/ --- a layer on top of Emacs and BISOS
+which creates a comprehensive integrated usage and development
+environment.
+
+* Support
+
+For support, criticism, comments and questions; please contact the
+author/maintainer\\
+[[http://mohsen.1.banan.byname.net][Mohsen Banan]] at:
+[[http://mohsen.1.banan.byname.net/contact]]
+
+* Planned Improvements
+
+** TODO The "secure it" layer: a real admin password, HTTPS (bisos.crypt), listening beyond loopback
+** TODO Architectures other than amd64 (pin each one's checksum in grafanaInfo)
+** TODO Plant the CBM leaf in bro_rawBisos (=sys/cbm/collective/hereWeb/grafana/=)
+
+
+# Local Variables:
+# eval: (setq-local toc-org-max-depth 4)
+# End:

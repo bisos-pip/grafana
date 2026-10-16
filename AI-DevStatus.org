@@ -1,0 +1,92 @@
+#+title: Development Status & Continuation Handoff
+#+TAGS: me ai aiAndMe
+
+# Provenance (installed once by aiActivity.cs --- not regenerated):
+#   Date:      2026-10-15T23:06:07+00:00
+#   User:      bystar
+#   Templates: /bisos/apps/defaults/ai-templates
+#   Command:   /bisos/venv/py3/devbin/aiActivity.cs -i initiate --activity=bisos-pip
+
+####+BEGIN: b:ai:file/particulars
+* AI Working Context
+  Working Directory: /bisos/git/auth/bxRepos/bisos-pip/grafana
+  File: /bisos/git/auth/bxRepos/bisos-pip/grafana/AI-DevStatus.org
+  Activity: bisos-pip
+  Companion Docs: AI-WORKFLOW.org, AI-Activity.org, AI-DevStatus.org
+####+END:
+
+Last updated: 2026-10-15 (package created and materialized on one host).
+
+This file is a working-state handoff so development can continue on another
+machine (which has this repo but NOT the developer's =~=). It captures the
+architecture, what works, what is untested and the design decisions made so far.
+
+This file is maintained by Claude. Updates are typically triggered by the
+=/bx-status-update= slash command, after major interactions, or before a release.
+
+* Current State
+  - bisos.grafana packages Grafana OSS 13.2.4 as a hereWeb-collective CBS/CBM, browsed as
+    http://grafana.here, login admin / grafana (rawBisos convention, insecure by design). Created
+    2026-10-15 in one session together with bisos.prometheus, on the pattern now in the
+    cbm-package-authorship skill. Installed editable in bisos3.
+  - Materialized on this host (Debian 13) by grafana-cbs.pcs -i cbs_materialize: unit active, this host's
+    Prometheus provisioned as the default datasource (healthy), a Host (node_exporter) dashboard
+    provisioned, driftCheck agrees. Not committed yet.
+
+* Architecture
+  - py3/bisos/grafana/grafanaInfo.py --- the single source of facts: pinned versions and
+    per-architecture checksums (Grafana, gcx), paths, banna ports (grafana; prometheus for the
+    datasource), the login, generators of grafana.ini, /etc/default/grafana, the datasource and
+    dashboard provisioning and the host dashboard JSON, tarballSetupScript(hasTopDir), textDrift/unitDrift.
+  - Layout: /opt/grafana/{grafana-13.2.4, current ->, gcx-1.6.0, gcx ->} root; /etc/grafana (750
+    root:grafana) with grafana.ini, provisioning/{datasources,dashboards,plugins,alerting}, dashboards/host.json
+    (640); /etc/default/grafana; /var/lib/grafana (grafana.db, plugins) grafana 750.
+  - py3/bin: grafana-sbom.pcs (server), grafanaUsage-sbom.pcs (gcx), grafanaCbs-sbom.pcs (both, for the
+    CBS); grafana-sysd.pcs; grafana-here-dns.pcs, grafana-wvd.pcs, grafana-assemble.cs; grafana-cbs.pcs;
+    cbmProc-grafana.spcs; grafanaAdmin.cs (hostInfo, servicesInfo, apiInfo, driftCheck, fullUpdate);
+    quickGrafana.cs.
+  - Port (bisos.banna): grafana=24011 on 127.0.0.1. grafana.here -> 127.0.22.115 -> nginx :80 ->
+    127.0.0.1:24011, with /api/live/ upgraded to WebSocket.
+  - Account grafana uid/gid 505 (bisos.banna.sysAccts).
+
+* What Works
+  Verified on this host, 2026-10-15:
+  - cbs_materialize (twice), unit active as grafana 505; first start takes ~30 s (nginx 502 meanwhile).
+  - /api/health ok (13.2.4); http://grafana.here/login 200; admin:grafana accepted.
+  - Datasource bisos-prometheus: health OK; node_load1 through /api/ds/query returns data.
+  - Folder BISOS with dashboard uid bisos-host.
+  - No plugin downloads at start (preinstall_disabled); /var/lib/grafana/plugins empty.
+  - driftCheck: grafana.ini, env file, datasource, dashboard provider, host.json, unit, link agree.
+  - gcx 1.6.0: login (GCX_KEYCHAIN=off), dashboards list, datasources list, against grafana.here.
+  - verify.sh end to end, all invariants PASS.
+
+* What Is Untested
+  - cbm_materialize at a planted CBM leaf (no leaf planted yet; cbs_materialize was run directly).
+  - A second platform; Debian 12; any architecture but amd64 (refused by design until pinned).
+  - Restart after a reboot; an upgrade (bump version + checksum, re-run the sbom: unpack + link flip).
+  - py3/tests/verify.sh passes end to end on this host; not in the RawBisos Vagrant reconstruction.
+  - grafanaUsage-sbom.pcs alone on a host without the server.
+  - Grafana Live through nginx (the WebSocket location is reasoned, not observed).
+
+* Key Design Decisions
+  - Upstream OSS tarball, pinned + SHA-256 per Debian architecture (Debian has no Grafana).
+  - Login admin / grafana: the rawBisos out-of-the-box convention (user admin, password the service's
+    name) (user, 2026-10-15). Applied by Grafana only when it creates grafana.db. Securing is a separate
+    layer on top. /etc/grafana is 750 because grafana.ini holds it.
+  - Usage side = gcx (the API is part of the server; gcx is separately packaged). grafana cli stays
+    with the server; grafana-foundation-sdk belongs to each consumer's venv.
+  - The Prometheus datasource takes its port from bisos.banna; bisos.grafana does not import
+    bisos.prometheus, and works (datasource unreachable) without it.
+  - No phoning home: reporting, update checks and plugin preinstalls off in grafana.ini.
+  - Logs to journald ([log] mode = console); no /var/log/grafana.
+  - gcx needs GCX_KEYCHAIN=off on a BISOS host (no OS keychain; gcx refuses to fall back to a file):
+    grafanaInfo.gcxLogin carries it; credentials then sit in plaintext under ~/.config/gcx (rawBisos).
+  - Config and provisioning written only when absent; driftCheck shows a unified diff instead of overwriting.
+  - Out of chain: the pattern is the cbm-package-authorship skill
+    (/bisos/git/bxRepos/bisos/defaults/ai-templates/bisos-pip/_skills/, under git); the shared-code
+    duplication, the plugin-download finding and two framework findings are in AI-Outputs.org
+    (blee-binders/evolution, under git).
+
+# Local Variables:
+# eval: (setq-local toc-org-max-depth 4)
+# End:
