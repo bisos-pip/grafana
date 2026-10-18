@@ -83,7 +83,7 @@ This file is maintained by Claude. Updates are typically triggered by the
     grafanaInfo.gcxLogin carries it; credentials then sit in plaintext under ~/.config/gcx (rawBisos).
   - Config and provisioning written only when absent; driftCheck shows a unified diff instead of overwriting.
   - Out of chain: the pattern is the cbm-package-authorship skill
-    (/bisos/git/bxRepos/bisos/defaults/ai-templates/bisos-pip/_skills/, under git); the shared-code
+    (/bisos/git/bxRepos/bisos/defaults/ai-templates/mother/_skills/, under git); the shared-code
     duplication, the plugin-download finding and two framework findings are in AI-Outputs.org
     (blee-binders/evolution, under git).
 
