@@ -26,4 +26,6 @@ from bisos.capability import cbmProc_seedInfo
 cbmProc_seedInfo.setup(
     capabilityName="grafana",
     cbsSpec="/bisos/git/bxRepos/bisos-pip/grafana/py3/bin/grafana-cbs.pcs",
+    verifyUnits=["grafana"],
+    verifySpec="grafanaAdmin.cs -i driftCheck",
 )
