@@ -5,13 +5,13 @@
 * Overview and Relevant Pointers
 grafana-cbs.pcs
 cbs: Capability Bundle Specification  -- Based on a cba-sysd.cs seed
-ws: An Web Service  --- /Service Component/ --- Grafana as grafana.here
+ws: An Web Service  --- /Service Component/ --- Grafana as grafana.internal
 n:  No Data    -- Materialization is purely based on Realm-BPO
 p:  Platform    -- Materialization is based on Platform-BPO (Site-BPO is not used)
 
 The bundle: grafanaCbs-sbom.pcs, which runs grafana-sbom.pcs (account, Grafana, config,
 provisioning) and grafanaUsage-sbom.pcs (gcx); the grafana unit; and grafana-assemble.cs
-(grafana.here dns + nginx vhost).
+(grafana.internal dns + nginx vhost).
 cba_seed takes one sbom, hence grafanaCbs-sbom.pcs rather than both names here.
 #+end_org """
 

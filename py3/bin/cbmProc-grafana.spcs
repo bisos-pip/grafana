@@ -5,8 +5,8 @@
 *
 * Planted location: sys/cbm/collective/hereWeb/grafana/cbmProc.spcs
 * Realm:            collective
-* CapabilityType:   hereWeb    (HTTP via .here fake domain)
-* CapabilityName:   grafana    (Grafana accessible as grafana.here)
+* CapabilityType:   hereWeb    (HTTP via .internal fake domain)
+* CapabilityName:   grafana    (Grafana accessible as grafana.internal)
 *
 * CBM sits on top of CBS --- it does NOT duplicate CBS content.
 * This file is a *pointer* to the CBS executable. cbm_* verbs

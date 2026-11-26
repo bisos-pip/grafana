@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """ #+begin_org
-* ~[Summary]~ :: A =PlantedCmndService= for grafana.here --- the /etc/hosts entry Grafana is browsed by
+* ~[Summary]~ :: A =PlantedCmndService= for grafana.internal --- the /etc/hosts entry Grafana is browsed by
 #+end_org """
 
 from bisos.b import cs

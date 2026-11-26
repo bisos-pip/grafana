@@ -77,10 +77,10 @@ class GrafanaInfo:
     # Grafana reads GF_<SECTION>_<KEY> variables as overrides of grafana.ini.
     envFile: pathlib.Path = pathlib.Path("/etc/default/grafana")
 
-    # Loopback only, behind nginx (grafana.here), as every rawBisos web UI is.
+    # Loopback only, behind nginx (grafana.internal), as every rawBisos web UI is.
     listenIp: str = "127.0.0.1"
 
-    fqdn: str = "grafana.here"
+    fqdn: str = bannaTcpPorts.hereFqdn('grafana')     # grafana.internal
 
     # rawBisos convention: user admin, password the service's name. Insecure by design;
     # Grafana applies it only when it creates grafana.db (the first start).

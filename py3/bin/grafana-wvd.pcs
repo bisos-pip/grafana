@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """ #+begin_org
-* ~[Summary]~ :: A =PlantedCmndService= for grafana.here NGINX virtual-host (capWebVd) --- fronts Grafana
+* ~[Summary]~ :: A =PlantedCmndService= for grafana.internal NGINX virtual-host (capWebVd) --- fronts Grafana
 #+end_org """
 
 from bisos.b import cs
@@ -16,7 +16,7 @@ from bisos.grafana.grafanaInfo import grafanaInfo
 
 serverName = grafanaInfo.fqdn
 # Grafana binds grafanaInfo.listenIp (loopback) only, so nginx proxies to that address
-# rather than to the grafana.here one.
+# rather than to the grafana.internal one.
 proxyIp = grafanaInfo.listenIp
 proxyPort = grafanaInfo.portNu
 

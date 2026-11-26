@@ -25,8 +25,16 @@ This file is maintained by Claude. Updates are typically triggered by the
 =/bx-status-update= slash command, after major interactions, or before a release.
 
 * Current State
+- 2026-11-26 (from a bisos-pip/b session): every =<name>.here= in this repo is now =<name>.internal=
+  (=.here= is an https-only gTLD in Chrome; bisos-pip/banna AI-WorkPlan.org Stage 4, banna's
+  =tcpPorts.hereFqdn=). Text renamed, not tested here; AI-WorkPlan.org keeps =.here= as history.
+- 2026-11-26: =grafana-sbom.pcs= =grafanaConfSetup= ran its tests and globs as the invoker, who cannot
+  see into =/etc/grafana= (=750 root:grafana=): every config file looked absent and was overwritten
+  on each run, and =chgrp ... provisioning/*= failed. Now =sudo test -f= and =sudo sh -c '...'=.
+  Tested on the dev host: =aptPkgs_update grafanaConfSetup= runs clean, =grafana.ini= kept,
+  =driftCheck= clean. Not released.
   - bisos.grafana packages Grafana OSS 13.2.4 as a hereWeb-collective CBS/CBM, browsed as
-    http://grafana.here, login admin / grafana (rawBisos convention, insecure by design). Created
+    http://grafana.internal, login admin / grafana (rawBisos convention, insecure by design). Created
     2026-10-15 in one session together with bisos.prometheus, on the pattern now in the
     cbm-package-authorship skill. Installed editable in bisos3.
   - Materialized on this host (Debian 13) by grafana-cbs.pcs -i cbs_materialize: unit active, this host's
@@ -45,19 +53,19 @@ This file is maintained by Claude. Updates are typically triggered by the
     CBS); grafana-sysd.pcs; grafana-here-dns.pcs, grafana-wvd.pcs, grafana-assemble.cs; grafana-cbs.pcs;
     cbmProc-grafana.spcs; grafanaAdmin.cs (hostInfo, servicesInfo, apiInfo, driftCheck, fullUpdate);
     quickGrafana.cs.
-  - Port (bisos.banna): grafana=24011 on 127.0.0.1. grafana.here -> 127.0.22.115 -> nginx :80 ->
+  - Port (bisos.banna): grafana=24011 on 127.0.0.1. grafana.internal -> 127.0.22.115 -> nginx :80 ->
     127.0.0.1:24011, with /api/live/ upgraded to WebSocket.
   - Account grafana uid/gid 505 (bisos.banna.sysAccts).
 
 * What Works
   Verified on this host, 2026-10-15:
   - cbs_materialize (twice), unit active as grafana 505; first start takes ~30 s (nginx 502 meanwhile).
-  - /api/health ok (13.2.4); http://grafana.here/login 200; admin:grafana accepted.
+  - /api/health ok (13.2.4); http://grafana.internal/login 200; admin:grafana accepted.
   - Datasource bisos-prometheus: health OK; node_load1 through /api/ds/query returns data.
   - Folder BISOS with dashboard uid bisos-host.
   - No plugin downloads at start (preinstall_disabled); /var/lib/grafana/plugins empty.
   - driftCheck: grafana.ini, env file, datasource, dashboard provider, host.json, unit, link agree.
-  - gcx 1.6.0: login (GCX_KEYCHAIN=off), dashboards list, datasources list, against grafana.here.
+  - gcx 1.6.0: login (GCX_KEYCHAIN=off), dashboards list, datasources list, against grafana.internal.
   - verify.sh end to end, all invariants PASS.
 
 * What Is Untested

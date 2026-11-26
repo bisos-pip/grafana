@@ -64,9 +64,11 @@ def grafanaDistSetup():
 
 
 def _writeIfAbsent(path, content: str, tag: str) -> str:
+    # sudo test, not [ -f ]: confDir is 750 root:grafana, so the invoker cannot see into it,
+    # and a plain test would find every file absent and overwrite it on each run.
     return f"""
 sudo mkdir -p {path.parent}
-if [ ! -f {path} ] ; then
+if ! sudo test -f {path} ; then
     sudo tee {path} >/dev/null <<'{tag}'
 {content}{tag}
 fi
@@ -90,8 +92,9 @@ def grafanaConfSetup():
                  + _writeIfAbsent(grafanaInfo.dashboardProviderFile, dashboardProviderContent(), "GRAFANA_DB_EOF")
                  + _writeIfAbsent(grafanaInfo.hostDashboardFile, hostDashboardContent(), "GRAFANA_HOST_EOF")
                  + f"sudo mkdir -p {prov}/plugins {prov}/alerting\n"
-                 + f"sudo chgrp {grafanaInfo.acctName} {grafanaInfo.confDir} {prov} {prov}/* {grafanaInfo.dashboardsDir}\n"
-                 + f"sudo chmod 750 {grafanaInfo.confDir} {prov} {prov}/* {grafanaInfo.dashboardsDir}\n")
+                 # The glob is expanded by root's shell: the invoker cannot list {prov}.
+                 + f"sudo sh -c 'chgrp {grafanaInfo.acctName} {grafanaInfo.confDir} {prov} {prov}/* {grafanaInfo.dashboardsDir}'\n"
+                 + f"sudo sh -c 'chmod 750 {grafanaInfo.confDir} {prov} {prov}/* {grafanaInfo.dashboardsDir}'\n")
 
 
 aptPkgsList = [
@@ -140,7 +143,7 @@ class readme(cs.Cmnd):
      verified by SHA-256, unpacked root-owned into {grafanaInfo.distDir},
      with {grafanaInfo.homeLink} pointing at it.
   4) grafanaConfSetup (each written only when absent):
-       {grafanaInfo.iniFile}       loopback listener, grafana.here, login, no phoning home
+       {grafanaInfo.iniFile}       loopback listener, grafana.internal, login, no phoning home
        {grafanaInfo.envFile}
        {grafanaInfo.datasourceFile}   Prometheus at {grafanaInfo.prometheusUrl}, default
        {grafanaInfo.dashboardProviderFile} + {grafanaInfo.hostDashboardFile}

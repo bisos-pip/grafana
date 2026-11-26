@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """ #+begin_org
-* ~[Summary]~ :: A =CmndSvc= for assembling grafana.here: the .here dns entry and the nginx vhost of Grafana.
+* ~[Summary]~ :: A =CmndSvc= for assembling grafana.internal: the .internal dns entry and the nginx vhost of Grafana.
 #+end_org """
 
 ####+BEGIN: b:py3:cs:file/dblockControls :classification "cs-mu"
@@ -51,7 +51,7 @@ csInfo['cmndParts'] = 'IcmCmndParts[common] IcmCmndParts[param]'
 * [[elisp:(org-cycle)][| ~Description~ |]] :: [[file:/bisos/git/auth/bxRepos/blee-binders/bisos-core/PyFwrk/bisos-pip/bisos.cs/_nodeBase_/fullUsagePanel-en.org][BISOS CmndSvcs Panel]]   [[elisp:(org-cycle)][| ]]
 
 This is the assemble step of grafana-cbs.pcs: after the sbom has installed Grafana
-and its provisioning, it registers =grafana.here= (grafana-here-dns.pcs) and installs and
+and its provisioning, it registers =grafana.internal= (grafana-here-dns.pcs) and installs and
 enables its nginx vhost (grafana-wvd.pcs), which proxies to Grafana on loopback.
 
 ** Status: Starting point
@@ -171,8 +171,8 @@ class examples(cs.Cmnd):
         #
 
         cs.examples.menuChapter('=Activation Commands=')
-        cmnd('hereDns', comment=" # grafana.here in /etc/hosts")
-        cmnd('webVirtDom', comment=" # grafana.here nginx vhost -> Grafana")
+        cmnd('hereDns', comment=" # grafana.internal in /etc/hosts")
+        cmnd('webVirtDom', comment=" # grafana.internal nginx vhost -> Grafana")
 
         cs.examples.menuChapter('=Full Update=')
         cmnd('fullUpdate', comment=" # hereDns + webVirtDom")

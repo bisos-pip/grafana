@@ -42,7 +42,7 @@
 ** +
 ** Overview
 bisos.grafana runs Grafana OSS on a BISOS host as a hereWeb-collective capability,
-browsed at http://grafana.here (admin / grafana), with this host's Prometheus provisioned as its datasource.
+browsed at http://grafana.internal (admin / grafana), with this host's Prometheus provisioned as its datasource.
 See [[file:../../../../README.org][README.org]] for what is installed where, the listener and the unit.
 ** Entry points
 - [[file:../../../bin/grafanaAdmin.cs][grafanaAdmin.cs]] --- hostInfo, servicesInfo, apiInfo, driftCheck

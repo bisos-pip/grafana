@@ -54,7 +54,7 @@ cases = [
     ('banna sysAccts: grafana uid',        sysAccts.sysAcctOf(i.acctName).uid == 505),
     ('banna sysAccts: homeDir',            sysAccts.sysAcctOf(i.acctName).homeDir == str(i.dataDir)),
     ('listener on loopback',               'http_addr = 127.0.0.1' in iniFileContent()),
-    ('root_url is grafana.here',           'root_url = http://grafana.here/' in iniFileContent()),
+    ('root_url is grafana.internal',           'root_url = http://grafana.internal/' in iniFileContent()),
     ('rawBisos login admin / grafana',     'admin_user = admin' in iniFileContent() and 'admin_password = grafana' in iniFileContent()),
     ('no plugin downloads at start',       'preinstall_disabled = true' in iniFileContent()),
     ('no phoning home',                    'reporting_enabled = false' in iniFileContent()),

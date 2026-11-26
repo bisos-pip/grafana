@@ -3,7 +3,7 @@
 
 """ #+begin_org
 * ~[Summary]~ :: A =CmndSvc= for admin-facing information about this host's
-  =grafana.here= Grafana installation: listener, login, service status, paths,
+  =grafana.internal= Grafana installation: listener, login, service status, paths,
   HTTP API and config drift.
 #+end_org """
 
@@ -52,7 +52,7 @@ csInfo['cmndParts'] = 'IcmCmndParts[common] IcmCmndParts[param]'
 """ #+begin_org
 * [[elisp:(org-cycle)][| ~Description~ |]] :: [[file:/bisos/git/auth/bxRepos/blee-binders/bisos-core/PyFwrk/bisos-pip/bisos.cs/_nodeBase_/fullUsagePanel-en.org][BISOS CmndSvcs Panel]]   [[elisp:(org-cycle)][| ]]
 
-This is an admin-facing =CmndSvc= for this host's =grafana.here= installation: the listener,
+This is an admin-facing =CmndSvc= for this host's =grafana.internal= installation: the listener,
 the rawBisos login and where things live, links for operating the =grafana-sysd.pcs= unit, the
 HTTP API through curl and gcx, and a read-only =driftCheck= of the live config and provisioning
 files and the unit against =bisos.grafana.grafanaInfo=. Modelled on =bisos.kafka='s =kafkaAdmin.cs=.
@@ -305,7 +305,7 @@ class servicesInfo(cs.Cmnd):
         literal("systemctl status grafana.service")
         literal("systemctl restart grafana.service   # re-reads grafana.ini and provisioning")
 
-        cs.examples.menuSection('/grafana.here -- dns and nginx vhost/')
+        cs.examples.menuSection('/grafana.internal -- dns and nginx vhost/')
         literal("grafana-here-dns.pcs -i dnsCap_verify")
         literal("grafana-wvd.pcs -i webVd_verify")
         literal("grafana-assemble.cs -i fullUpdate   # both of the above, updated")
